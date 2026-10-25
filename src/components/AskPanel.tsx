@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { getState } from '../state/store';
 
 /** GeoAI assistant — talks to the EssentialRoute FastAPI backend (Qwen2.5-1.5B-Instruct + live Open-Meteo rain). */
 const API_URL = 'https://essentialroute-api.onrender.com/ask';
 
 type Zone = { name: string; severity: string; now_mm_h?: number; last3h_mm?: number };
-type Msg = { role: 'user' | 'ai'; text: string; zones?: Zone[]; error?: boolean };
+type Msg = { role: 'user' | 'ai'; text: string; zones?: Zone[]; error?: boolean; by?: string; source?: string };
+
+/** The flood state the map is currently showing, so the assistant's answer matches it. */
+function appFloodState() {
+  const rain = getState().rain;
+  return {
+    mode: rain.mode,
+    ok: rain.mode !== 'live' || rain.live.status === 'ok',
+    zones: rain.zones.map((z) => ({ label: z.label, severity: z.severity, nowMmH: z.rain?.nowMmH, last3hMm: z.rain?.last3hMm, kind: z.kind })),
+  };
+}
 
 const SUGGESTIONS = [
   'Is Andheri Subway safe right now?',
@@ -43,13 +54,13 @@ export function AskPanel() {
       const r = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, app_state: appFloodState() }),
         signal: ctrl.signal,
       });
       clearTimeout(kill);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
-      setMsgs((m) => [...m, { role: 'ai', text: d.answer, zones: d.flood_zones }]);
+      setMsgs((m) => [...m, { role: 'ai', text: d.answer, zones: d.flood_zones, by: d.answered_by, source: d.data_source }]);
     } catch {
       setMsgs((m) => [...m, { role: 'ai', text: 'Could not reach the GeoAI assistant. Check your connection and try again.', error: true }]);
     } finally {
@@ -91,6 +102,12 @@ export function AskPanel() {
                     </span>
                   ))}
               </div>
+            )}
+            {m.by && (
+              <p className="ask-meta">
+                {m.by === 'llm' ? 'Answered by Qwen2.5-1.5B' : 'Rule-based answer (AI model offline)'}
+                {m.source && m.source !== 'unavailable' ? ` · ${m.source.includes('SIMULATED') ? 'simulated rain' : 'live rain'}` : ' · no rain data'}
+              </p>
             )}
           </div>
         ))}

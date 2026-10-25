@@ -574,8 +574,9 @@ details.adv > summary > svg { color: var(--accent); flex: none; }
 .ask-msg.is-busy { color: var(--text-2); font-style: italic; }
 .ask-zones { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .ask-zone { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
-.ask-zone.sev-severe { background: rgba(255, 90, 90, 0.18); color: #ff9a9a; }
-.ask-zone.sev-moderate { background: rgba(255, 190, 70, 0.18); color: #ffd27a; }
+.ask-zone.sev-severe, .ask-zone.sev-high, .ask-zone.sev-extreme { background: rgba(255, 90, 90, 0.18); color: #ff9a9a; }
+.ask-zone.sev-moderate, .ask-zone.sev-low { background: rgba(255, 190, 70, 0.18); color: #ffd27a; }
+.ask-meta { margin-top: 6px !important; font-size: 11.5px; color: var(--text-3); }
 .ask-form { display: flex; gap: 8px; position: sticky; bottom: 0; padding: 8px 0 4px; background: inherit; }
 .ask-input { flex: 1; min-width: 0; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-size: 16px; }
 .ask-input:focus { outline: none; border-color: var(--accent); }
