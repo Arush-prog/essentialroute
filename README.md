@@ -3,6 +3,21 @@
 Flood-aware navigation and essential-service access analysis for Mumbai.
 GeoAI IIT Bombay Hackathon prototype — React 19 + TypeScript + Leaflet, installable PWA, mobile-first.
 
+- **Live app:** https://essentialroute.vercel.app
+- **GeoAI assistant API:** `POST https://essentialroute-api.onrender.com/ask` · [source](https://github.com/Arush-prog/essentialroute-api)
+
+## GeoAI assistant (Ask AI tab)
+
+The **Ask AI** tab lets commuters ask route-safety questions in plain language — e.g. *"Is Andheri Subway safe right now?"*. Questions go to the EssentialRoute API, which reads live rainfall at the 11 flood hotspots (Open-Meteo), classifies each spot's flood severity, and answers with **Qwen2.5-1.5B-Instruct** (open weights, 1.5B parameters) using that live flood status as context. If the model is unreachable, the API falls back to a rule-based answer from the same flood data, so the assistant always responds. Flooded or waterlogged junctions are tagged under each answer.
+
+```bash
+curl -X POST https://essentialroute-api.onrender.com/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Is Andheri Subway safe right now?"}'
+```
+
+The API runs on a free tier that sleeps when idle — the first request can take up to a minute.
+
 > Prototype. Not a substitute for official emergency instructions. In an emergency call **112**.
 
 ---
