@@ -25,6 +25,8 @@ interface Geom {
 let geom: Geom | null = null;
 let lastIdx = 0;
 let offCount = 0;
+/** true once the user has actually been on the route; until then a start point they chose is kept */
+let joined = false;
 let lastReroute = 0;
 const announced = new Map<number, Set<'far' | 'near'>>();
 
@@ -136,6 +138,7 @@ export function startNavigation() {
   geom = buildGeom(r);
   lastIdx = 0;
   offCount = 0;
+  joined = s.originMode === 'live';
   announced.clear();
   setState({
     nav: { ...s.nav, active: true, mode: 'live', routeId: r.id, step: 0, progress: null, rerouting: false, arrived: false, demo: false, startedAt: Date.now() },
@@ -148,7 +151,15 @@ export function startNavigation() {
   startLocation();
   void lockScreen();
   const fix = getState().geo.fix;
-  if (fix) {
+  const chosenStart = s.originMode === 'fixed' && s.origin ? s.origin : null;
+  if (chosenStart && (!fix || haversine(fix, chosenStart) > 300)) {
+    // the user picked a start point somewhere else: keep their route, follow them once they reach it
+    if (fix) onFix();
+    toast(`Route starts at ${chosenStart.name}. Guidance follows you once you reach it.`);
+    setTimeout(() => {
+      if (getState().nav.active) flyTo(chosenStart.lat, chosenStart.lon, 16);
+    }, 80);
+  } else if (fix) {
     onFix();
     // after the navigation screen has rendered, so the camera knows where the banners are
     setTimeout(() => {
@@ -211,6 +222,7 @@ export function startDemoDrive() {
   geom = buildGeom(r);
   lastIdx = 0;
   offCount = 0;
+  joined = true;
   announced.clear();
   let routeId = r.id;
   let along = 0;
@@ -282,6 +294,7 @@ function reroute(reason: string) {
   if (!fix || !s.destination) return;
   lastReroute = Date.now();
   offCount = 0;
+  joined = true;
   setState((st) => ({
     nav: { ...st.nav, rerouting: true },
     origin: { id: 'gps', name: 'My location', context: `GPS ±${Math.round(fix.accuracy)} m`, lat: fix.lat, lon: fix.lon, source: 'gps' },
@@ -311,10 +324,11 @@ function onFix() {
 
   // off the route: re-plan from here (the planner is flood-aware, so the new route avoids zones too)
   const tol = Math.max(45, Math.min(fix.accuracy, 80));
+  if (fix.accuracy <= 100 && hit.off <= tol) joined = true;
   if (fix.accuracy <= 100 && hit.off > tol) offCount++;
   else offCount = 0;
   const farAtStart = hit.off > 300 && fix.accuracy <= 150;
-  if (!s.nav.demo && !s.nav.rerouting && Date.now() - lastReroute > 12_000 && (farAtStart || offCount >= 2)) {
+  if (joined && !s.nav.demo && !s.nav.rerouting && Date.now() - lastReroute > 12_000 && (farAtStart || offCount >= 2)) {
     reroute(farAtStart && hit.along < 50 ? 'Starting from your current location…' : 'Off route — finding a new safe route…');
   }
 
