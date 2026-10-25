@@ -353,7 +353,7 @@ export function MapView() {
       const selected = plan.routes.find((r) => r.id === s.selectedRouteId) ?? plan.routes[plan.recommendedIndex];
       for (const r of plan.routes) {
         if (r === selected || navigating) continue;
-        const line = L.polyline(r.coords, { pane: 'routes', color: r.exposure.blocked ? '#8a94a6' : '#7fa7e8', weight: 6, opacity: 0.9, dashArray: r.id === plan.baselineId && r.exposure.exposedM > 0 ? '8 8' : undefined, lineCap: 'round' });
+        const line = L.polyline(r.coords, { pane: 'routes', smoothFactor: 0, color: r.exposure.blocked ? '#8a94a6' : '#7fa7e8', weight: 6, opacity: 0.9, dashArray: r.id === plan.baselineId && r.exposure.exposedM > 0 ? '8 8' : undefined, lineCap: 'round' });
         line.on('click', (e) => {
           if (forwardIfPlacing(e)) return;
           L.DomEvent.stopPropagation(e);
@@ -363,7 +363,7 @@ export function MapView() {
         line.addTo(group);
       }
       if (plan.graphPath && !navigating) {
-        L.polyline(plan.graphPath.coords, { pane: 'routes', color: '#A3E635', weight: 5, opacity: 0.95, dashArray: '2 9', lineCap: 'round' })
+        L.polyline(plan.graphPath.coords, { pane: 'routes', smoothFactor: 0, color: '#A3E635', weight: 5, opacity: 0.95, dashArray: '2 9', lineCap: 'round' })
           .bindTooltip('Approximate major-road graph path (A*) avoiding impassable zones', { sticky: true })
           .addTo(group);
       }
@@ -379,8 +379,8 @@ export function MapView() {
       });
       if (!onGl) {
         const w = navigating ? 10 : 7;
-        L.polyline(selected.coords, { pane: 'routes', color: selected.exposure.blocked ? '#5b6577' : '#0b57d0', weight: w + 4, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(group);
-        L.polyline(selected.coords, { pane: 'routes', color: selected.exposure.blocked ? '#8FA3BF' : '#1a73e8', weight: w, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(group);
+        L.polyline(selected.coords, { pane: 'routes', smoothFactor: 0, color: selected.exposure.blocked ? '#5b6577' : '#0b57d0', weight: w + 4, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(group);
+        L.polyline(selected.coords, { pane: 'routes', smoothFactor: 0, color: selected.exposure.blocked ? '#8FA3BF' : '#1a73e8', weight: w, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(group);
         arrowCoords = selected.coords;
       }
       const drawn = new Set<string>();
@@ -391,6 +391,7 @@ export function MapView() {
           drawn.add(k);
           L.polyline(seg.coords, {
             pane: 'exposure',
+            smoothFactor: 0,
             color: seg.blocked ? '#FF3B3B' : SEVERITY_COLOR[sevOf(seg.zoneId)],
             weight: r === selected ? 7 : 5,
             opacity: 1,

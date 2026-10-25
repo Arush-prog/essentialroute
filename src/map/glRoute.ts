@@ -48,8 +48,8 @@ function chevron(): { width: number; height: number; data: Uint8ClampedArray } {
 
 function ensure(gl: GlMap) {
   if (!gl.hasImage(IMG)) gl.addImage(IMG, chevron(), { pixelRatio: 2 });
-  if (!gl.getSource(SRC_ROUTE)) gl.addSource(SRC_ROUTE, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  if (!gl.getSource(SRC_EXPO)) gl.addSource(SRC_EXPO, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  if (!gl.getSource(SRC_ROUTE)) gl.addSource(SRC_ROUTE, { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, tolerance: 0, maxzoom: 22, buffer: 128 });
+  if (!gl.getSource(SRC_EXPO)) gl.addSource(SRC_EXPO, { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, tolerance: 0, maxzoom: 22, buffer: 128 });
   // widths follow zoom like Google Maps (MapLibre zoom = Leaflet zoom − 1)
   const w = (base: number) => ['interpolate', ['exponential', 1.5], ['zoom'], 9, base * 0.45, 13, base, 17, base * 2.1];
   if (!gl.getLayer('er-route-case'))
